@@ -11,8 +11,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23c96f4a'/><text x='50' y='66' font-size='46' font-family='Georgia,serif' font-weight='bold' text-anchor='middle' fill='%23f6f2ea'>Л</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+#progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--terra); z-index: 300; width: 0; transition: width .1s linear; }
 :root {
     --bg: #0b0c09;
     --card: #0d0e0b;
@@ -161,6 +163,23 @@ section { padding: 110px 0; position: relative; }
 .month .status.few::before { background: var(--terra); }
 .month .status.soon::before { background: var(--line); }
 
+/* Gallery */
+.gallery .g-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 210px; gap: 14px; }
+.g-item { position: relative; border-radius: 18px; overflow: hidden; cursor: pointer; }
+.g-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.22,1,.36,1), filter .5s; filter: saturate(.9) brightness(.95); }
+.g-item:hover img { transform: scale(1.07); filter: saturate(1.05) brightness(1); }
+.g-item.big { grid-column: span 2; grid-row: span 2; }
+.g-item::after { content: "↗"; position: absolute; right: 14px; bottom: 12px; width: 40px; height: 40px; border-radius: 50%; background: var(--terra); color: #fff; display: grid; place-items: center; font-size: 16px; opacity: 0; transform: translateY(8px); transition: .3s; }
+.g-item:hover::after { opacity: 1; transform: none; }
+.lightbox { display: none; position: fixed; inset: 0; z-index: 400; background: rgba(4,5,3,.96); place-items: center; padding: 24px; cursor: zoom-out; }
+.lightbox.open { display: grid; animation: lb-in .25s ease; }
+@keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+.lightbox img { max-width: 100%; max-height: 90vh; border-radius: 16px; }
+
+/* Back to top */
+.btt { position: fixed; right: 26px; bottom: 96px; z-index: 149; width: 44px; height: 44px; border-radius: 50%; background: var(--card); border: 1px solid var(--line); color: var(--text); display: none; place-items: center; cursor: pointer; font-size: 17px; transition: .25s; }
+.btt:hover { background: var(--terra); color: #fff; border-color: var(--terra); transform: translateY(-3px); }
+
 /* Testimonials (static editorial) */
 .reviews { background: var(--card); }
 .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
@@ -216,7 +235,7 @@ footer p { color: var(--muted); font-size: 13.5px; }
 .float-tg svg { width: 28px; height: 28px; fill: currentColor; }
 .mobile-cta { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 145; background: rgba(11,12,9,.97); backdrop-filter: blur(10px); border-top: 1px solid var(--line); padding: 12px 16px 16px; }
 .mobile-cta .btn { display: block; text-align: center; width: 100%; }
-@media (max-width: 760px) { .mobile-cta { display: block; } .float-tg { bottom: 84px; } .cta { padding-bottom: 140px; } }
+@media (max-width: 760px) { .mobile-cta { display: block; } .float-tg { bottom: 84px; } .btt { bottom: 150px; } .cta { padding-bottom: 140px; } }
 
 /* Reveal */
 .reveal { opacity: 0; transform: translateY(34px); transition: opacity .8s ease, transform .8s ease; }
@@ -238,12 +257,18 @@ footer p { color: var(--muted); font-size: 13.5px; }
     .dome-row:nth-child(even) .dome-img { order: 0; }
     .dome-row:nth-child(even) .dome-info { order: 0; }
     .testi-grid, .avail .grid { grid-template-columns: 1fr 1fr; }
+    .gallery .g-grid { grid-template-columns: 1fr 1fr; }
+    .g-item.big { grid-column: span 2; }
+    .gallery .g-grid { grid-template-columns: 1fr 1fr; }
+    .g-item.big { grid-column: span 2; }
 }
 @media (max-width: 760px) {
     .nav-links { display: none; position: absolute; top: 80px; left: 0; right: 0; flex-direction: column; background: rgba(11,12,9,.99); padding: 24px 8%; gap: 18px; border-bottom: 1px solid var(--line); }
     .nav-links.open { display: flex; }
     .burger { display: block; }
     .testi-grid, .avail .grid { grid-template-columns: 1fr; }
+    .gallery .g-grid { grid-template-columns: 1fr; }
+    .g-item.big { grid-column: span 1; grid-row: span 1; }
     .booking-row { grid-template-columns: 1fr; }
     section { padding: 76px 0; }
     .cta-box { padding: 54px 26px; }
@@ -253,6 +278,8 @@ footer p { color: var(--muted); font-size: 13.5px; }
 </style>
 </head>
 <body>
+
+<div id="progress"></div>
 
 <nav class="nav" id="nav">
     <div class="container nav-inner">
@@ -286,8 +313,8 @@ footer p { color: var(--muted); font-size: 13.5px; }
         </div>
         <div class="hero-media">
             <div class="blob">
-                <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=80" alt="Глэмпинг в лесу">
-                <div class="leaf-badge">Сезон<br>открыт<br>май—октябрь</div>
+                <img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1000&q=80" alt="Глэмпинг в лесу" fetchpriority="high">
+                <div class="leaf-badge">Сезон<br>открыт<br>май—декабрь</div>
                 <div class="card">
                     <div class="ic">🔥</div>
                     <div><b>Камин включён</b><span>тёплый вечер под звёздами</span></div>
@@ -314,7 +341,7 @@ footer p { color: var(--muted); font-size: 13.5px; }
 
         <div class="dome-row reveal">
             <div class="dome-img">
-                <img src="https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1000&q=80" alt="Шапито Лес" loading="lazy">
+                <img src="https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1000&q=80" alt="Шапито Лес" loading="lazy" decoding="async">
                 <div class="price">от <span>4 900₽</span> / ночь</div>
             </div>
             <div class="dome-info">
@@ -329,7 +356,7 @@ footer p { color: var(--muted); font-size: 13.5px; }
 
         <div class="dome-row reveal">
             <div class="dome-img">
-                <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1000&q=80" alt="Сфера Тишина" loading="lazy">
+                <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1000&q=80" alt="Сфера Тишина" loading="lazy" decoding="async">
                 <div class="price">от <span>5 900₽</span> / ночь</div>
             </div>
             <div class="dome-info">
@@ -344,7 +371,7 @@ footer p { color: var(--muted); font-size: 13.5px; }
 
         <div class="dome-row reveal">
             <div class="dome-img">
-                <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1000&q=80" alt="Избушка Костер" loading="lazy">
+                <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1000&q=80" alt="Избушка Костер" loading="lazy" decoding="async">
                 <div class="price">от <span>6 900₽</span> / ночь</div>
             </div>
             <div class="dome-info">
@@ -370,6 +397,25 @@ footer p { color: var(--muted); font-size: 13.5px; }
         </div>
     </div>
 </section>
+
+<section class="gallery" id="gallery">
+    <div class="container">
+        <div class="sec-head reveal">
+            <div class="eyebrow">Локация · Фото</div>
+            <h2>Загляни <em>в наш лес</em></h2>
+            <p>Кликай по фото, чтобы рассмотреть поближе. Здесь будут ваши выходные.</p>
+        </div>
+        <div class="g-grid" id="galleryGrid">
+            <div class="g-item big reveal" data-src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=80"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80" alt="Озеро у леса" loading="lazy" decoding="async"></div>
+            <div class="g-item reveal" data-src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1400&q=80"><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=900&q=80" alt="Туман в лесу" loading="lazy" decoding="async"></div>
+            <div class="g-item reveal" data-src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1400&q=80"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=900&q=80" alt="Сосновый бор" loading="lazy" decoding="async"></div>
+            <div class="g-item reveal" data-src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=1400&q=80"><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=900&q=80" alt="Лесная тропа" loading="lazy" decoding="async"></div>
+            <div class="g-item reveal" data-src="https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=1400&q=80"><img src="https://images.unsplash.com/photo-1507400492013-162706c8c05e?auto=format&fit=crop&w=900&q=80" alt="Костёр вечером" loading="lazy" decoding="async"></div>
+        </div>
+    </div>
+</section>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')"><img id="lbImg" alt=""></div>
 
 <section class="packages" id="packages">
     <div class="container">
@@ -413,7 +459,7 @@ footer p { color: var(--muted); font-size: 13.5px; }
         <div class="sec-head reveal">
             <div class="eyebrow">Свободные даты</div>
             <h2>Когда <em>лес свободен</em></h2>
-            <p>Сезон открыт с мая по октябрь. Выбирай месяц и бронируй даты в Telegram.</p>
+            <p>Сезон открыт с мая по декабрь. Выбирай месяц и бронируй даты в Telegram.</p>
         </div>
         <div class="grid">
             <div class="month reveal">
@@ -443,6 +489,16 @@ footer p { color: var(--muted); font-size: 13.5px; }
             </div>
             <div class="month reveal">
                 <h3><span>🌧️</span>Октябрь</h3>
+                <div class="dates"><span class="d">по запросу</span></div>
+                <div class="status soon">По запросу</div>
+            </div>
+            <div class="month reveal">
+                <h3><span>❄️</span>Ноябрь</h3>
+                <div class="dates"><span class="d">по запросу</span></div>
+                <div class="status soon">По запросу</div>
+            </div>
+            <div class="month reveal">
+                <h3><span>🎄</span>Декабрь</h3>
                 <div class="dates"><span class="d">по запросу</span></div>
                 <div class="status soon">По запросу</div>
             </div>
@@ -535,6 +591,8 @@ footer p { color: var(--muted); font-size: 13.5px; }
     <svg viewBox="0 0 24 24"><path d="M9.04 15.51l-.38 3.65c.54 0 .77-.23 1.06-.52l2.56-2.46 5.3 3.91c.97.54 1.66.26 1.92-.9l3.47-16.35c.31-1.47-.54-2.04-1.52-1.68L1.18 10.39C-.4 10.98-.39 11.88 1.01 12.3l5.2 1.62L17.68 5.6c.61-.4 1.17-.18.71.22L9.04 15.51z"/></svg>
 </a>
 
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх">↑</button>
+
 <div class="mobile-cta"><a href="#book" class="btn btn-solid">Забронировать домик</a></div>
 
 <script>
@@ -545,6 +603,13 @@ menu.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { menu
 
 const nav = document.getElementById("nav");
 window.addEventListener("scroll", () => nav.classList.toggle("scrolled", window.scrollY > 20));
+
+const progress = document.getElementById("progress");
+window.addEventListener("scroll", () => {
+    const pct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+    progress.style.width = (pct * 100) + "%";
+    document.getElementById("btt").style.display = window.scrollY > 400 ? "grid" : "none";
+});
 
 document.querySelectorAll(".btn").forEach(btn => {
     btn.addEventListener("pointerdown", e => {
@@ -581,6 +646,13 @@ const counterIO = new IntersectionObserver(entries => {
     });
 }, { threshold: .6 });
 document.querySelectorAll("[data-count]").forEach(el => counterIO.observe(el));
+
+document.querySelectorAll(".g-item").forEach(item => {
+    item.addEventListener("click", () => {
+        const src = item.dataset.src;
+        if (src) { document.getElementById("lbImg").src = src; document.getElementById("lightbox").classList.add("open"); }
+    });
+});
 
 document.querySelectorAll(".faq-item").forEach(item => {
     const q = item.querySelector(".faq-q");
